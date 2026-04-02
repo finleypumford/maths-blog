@@ -1,22 +1,358 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>FP Maths Blogs</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FP Maths</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080808;
+    --border: rgba(255,255,255,0.07);
+    --gold: #c8a96e;
+    --gold2: #e8c990;
+    --text: #ddd8d0;
+    --muted: #5a5550;
+    --muted2: #3a3530;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  #bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.15;
+    pointer-events: none;
+  }
+
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    background: rgba(8,8,8,0.8);
+  }
+
+  .nav-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 54px;
+  }
+
+  .nav-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    transition: color 0.2s;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  .nav-logo:hover { color: var(--gold); }
+
+  .nav-tabs {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .nav-tab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 7px 16px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-right: 1px solid var(--border);
+    transition: all 0.18s;
+  }
+  .nav-tab:last-child { border-right: none; }
+  .nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .nav-tab.active { color: var(--gold); background: rgba(200,169,110,0.07); }
+
+  .page { display: none; animation: fadeUp 0.4s ease both; }
+  .page.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 2;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  .home-header {
+    padding: 5rem 0 3.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .home-header h1 {
+    font-size: clamp(2.4rem, 6vw, 3.8rem);
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .home-header h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .home-header p {
+    font-size: 1.05rem;
+    font-style: italic;
+    color: var(--muted);
+    line-height: 1.8;
+    max-width: 500px;
+  }
+
+  .page-head {
+    padding: 4rem 0 0;
+    margin-bottom: 0;
+  }
+
+  .page-head h2 {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2rem;
+  }
+
+  .entry-list { padding: 0 0 5rem; }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    padding: 2.5rem 0 0.8rem;
+  }
+
+  .entry {
+    display: grid;
+    grid-template-columns: 110px 1fr 20px;
+    align-items: baseline;
+    gap: 0 1.8rem;
+    padding: 1.3rem 0;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    color: inherit;
+  }
+  .entry:first-child { border-top: 1px solid var(--border); }
+
+  .entry-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+    letter-spacing: 0.06em;
+    padding-top: 3px;
+  }
+
+  .entry-title {
+    font-size: 1.15rem;
+    font-weight: 400;
+    color: var(--text);
+    transition: color 0.18s;
+    line-height: 1.35;
+  }
+  .entry:hover .entry-title { color: var(--gold2); }
+
+  .entry-arrow {
+    font-size: 1rem;
+    color: var(--gold);
+    opacity: 0;
+    transition: all 0.18s;
+    text-align: right;
+  }
+  .entry:hover .entry-arrow { opacity: 1; transform: translate(2px,-2px); }
+
+  footer {
+    position: relative;
+    z-index: 2;
+    border-top: 1px solid var(--border);
+    padding: 1.4rem 2rem;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  footer span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+    letter-spacing: 0.08em;
+  }
+</style>
 </head>
-
 <body>
-  <h1>FP Maths Blogs</h1>
 
-<p>Welcome! My name is Finley, I am currently in year 12 and this is my website. This website is a space where I share my thought through blogs and showcase projects I have been working on. My goal here, is to widen my knowledge, and please my curiosity by learning mathematics beyond the classroom.</p>
+<canvas id="bg-canvas"></canvas>
 
- <header>
-    <h1> <a href="blog.html">Blogs.</a></h1>
-  </header>
+<nav>
+  <div class="nav-inner">
+    <button class="nav-logo" onclick="showPage('home')">FP Maths</button>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('home')" id="tab-home">Home</button>
+      <button class="nav-tab" onclick="showPage('blogs')" id="tab-blogs">Blogs</button>
+      <button class="nav-tab" onclick="showPage('projects')" id="tab-projects">Projects</button>
+    </div>
+  </div>
+</nav>
 
- <header>
-    <h1> <a href="projects.html">Projects.</a></h1>
-  </header>
-  
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="wrapper">
+    <div class="home-header">
+      <h1>FP Maths <em>Blogs.</em></h1>
+      <p>A space to share thoughts through blogs and showcase projects — widening my knowledge and exploring mathematics beyond the classroom.</p>
+    </div>
+    <p class="section-label">Blogs</p>
+    <div class="entry-list">
+      <a class="entry" href="https://drive.google.com/file/d/13u4VDY42WGYLTzqRQeW8odWG6ljmZSQl/view?usp=sharing" target="_blank">
+        <span class="entry-date">30/03/2026</span>
+        <span class="entry-title">Free WiFi? — Integral</span>
+        <span class="entry-arrow">↗</span>
+      </a>
+      <a class="entry" href="https://drive.google.com/file/d/1pfeHaZqwoyR9GdbFDZiiLKWiSA07rA26/view?usp=sharing" target="_blank">
+        <span class="entry-date">20/03/2026</span>
+        <span class="entry-title">Proofs of primes (Tom rocks maths essay competition entry)</span>
+        <span class="entry-arrow">↗</span>
+      </a>
+      <a class="entry" href="https://sites.google.com/view/bike-steering-formula/home" target="_blank">
+        <span class="entry-date">15/02/2026</span>
+        <span class="entry-title">Bike steering formula</span>
+        <span class="entry-arrow">↗</span>
+      </a>
+      <a class="entry" href="https://sites.google.com/view/gaussian-integral-finp/home" target="_blank">
+        <span class="entry-date">03/02/2026</span>
+        <span class="entry-title">Gaussian integral</span>
+        <span class="entry-arrow">↗</span>
+      </a>
+    </div>
+    <p class="section-label">Projects</p>
+    <div class="entry-list"></div>
+  </div>
+</div>
+
+<!-- BLOGS -->
+<div class="page" id="page-blogs">
+  <div class="wrapper">
+    <div class="page-head"><h2>Blogs.</h2></div>
+    <div class="entry-list">
+      <a class="entry" href="https://drive.google.com/file/d/13u4VDY42WGYLTzqRQeW8odWG6ljmZSQl/view?usp=sharing" target="_blank">
+        <span class="entry-date">30/03/2026</span>
+        <span class="entry-title">Free WiFi? — Integral</span>
+        <span class="entry-arrow">↗</span>
+      </a>
+      <a class="entry" href="https://drive.google.com/file/d/1pfeHaZqwoyR9GdbFDZiiLKWiSA07rA26/view?usp=sharing" target="_blank">
+        <span class="entry-date">20/03/2026</span>
+        <span class="entry-title">Proofs of primes (Tom rocks maths essay competition entry)</span>
+        <span class="entry-arrow">↗</span>
+      </a>
+      <a class="entry" href="https://sites.google.com/view/bike-steering-formula/home" target="_blank">
+        <span class="entry-date">15/02/2026</span>
+        <span class="entry-title">Bike steering formula</span>
+        <span class="entry-arrow">↗</span>
+      </a>
+      <a class="entry" href="https://sites.google.com/view/gaussian-integral-finp/home" target="_blank">
+        <span class="entry-date">03/02/2026</span>
+        <span class="entry-title">Gaussian integral</span>
+        <span class="entry-arrow">↗</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECTS -->
+<div class="page" id="page-projects">
+  <div class="wrapper">
+    <div class="page-head"><h2>Projects.</h2></div>
+    <div class="entry-list"></div>
+  </div>
+</div>
+
+<footer><span>finleypumford.github.io/maths-blog</span></footer>
+
+<script>
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.getElementById('tab-' + id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, pts;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+
+  function initPts() {
+    pts = Array.from({ length: 50 }, () => ({
+      x: Math.random()*W, y: Math.random()*H,
+      r: Math.random()*0.9+0.3,
+      dx: (Math.random()-0.5)*0.2, dy: (Math.random()-0.5)*0.2
+    }));
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    ctx.lineWidth = 0.4;
+    ctx.strokeStyle = 'rgba(200,169,110,0.09)';
+    const g = 65;
+    for (let x=0;x<W;x+=g){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for (let y=0;y<H;y+=g){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+    pts.forEach(p => {
+      p.x+=p.dx; p.y+=p.dy;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(200,169,110,0.45)'; ctx.fill();
+    });
+
+    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<120){
+        ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y);
+        ctx.strokeStyle=`rgba(200,169,110,${0.09*(1-d/120)})`; ctx.lineWidth=0.4; ctx.stroke();
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  resize(); initPts(); draw();
+  window.addEventListener('resize',()=>{resize();initPts();});
+</script>
 </body>
 </html>
